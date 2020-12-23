@@ -1,0 +1,27 @@
+/home/hezhenfeng/.conda/envs/insurance_venv/lib/python3.7/site-packages/pandas/core/indexing.py:966: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  self.obj[item] = s
+/home/hezhenfeng/.conda/envs/insurance_venv/lib/python3.7/site-packages/pandas/core/indexing.py:966: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  self.obj[item] = s
+thresholds got
+preprocessed data got
+thresholds got
+preprocessed data got
+start
+医院类型： public
+阈值： th_all_count              5.000000
+th_one_liezhi_money    2084.387000
+th_all_liezhi_money    2251.430000
+th_one_med_p_low          0.034413
+th_one_med_p_high         0.903596
+th_one_exp_p              0.800000
+th_all_exp_p              0.800000
+Name: 0, dtype: float64
+时间 2780.7866780757904

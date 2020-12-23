@@ -1,0 +1,19 @@
+profile.py:102: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  row['age'] = age_index[index]
+/home/hezhenfeng/.conda/envs/insurance_venv/lib/python3.7/site-packages/pandas/core/indexing.py:671: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  self._setitem_with_indexer(indexer, value)
+/home/hezhenfeng/.conda/envs/insurance_venv/lib/python3.7/site-packages/pandas/core/series.py:1024: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  self.loc[key] = value
+step1 finished
+step2 finished
+finished
+time: 12299.160281419754

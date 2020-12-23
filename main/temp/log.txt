@@ -1,0 +1,8 @@
+2018 start
+this step cost time is 77.62471982240677 min
+2019 start
+this step cost time is 143.2496128598849 min
+2020 start
+this step cost time is 166.25306926965715 min
+cost time is 166.58517770767213 min
+finished
