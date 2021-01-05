@@ -82,7 +82,7 @@ def get_yichang_doctor():
                 AND b.BKC903 != 1"""
     cursor.execute(sql)
     while True:
-        print('row: {}'.format(cnt))
+        # print('row: {}'.format(cnt))
         cnt += 1000
         rows = cursor.fetchmany(1000)
         if len(rows) == 0:
@@ -163,14 +163,14 @@ def get_yichang_doctor():
 
     headers = ["主键", "医师身份证号", "医师编码", "5分钟异常次数", "10分钟异常次数", "60分钟异常次数", "半天内异常次数", "异常机构数", "医师姓名", "异常机构编码", "风险率", "日异常列支总金额"]
     output = pd.DataFrame(np.array(output), columns=headers)
-    output.to_excel('../data/model_shangxian/医师违规2020_final.xlsx', index=False)
+    output.to_excel('../../data/model_shangxian/医师违规2020——后半年_final.xlsx', index=False)
     print(output.shape)
 
     print(cnt2, len(doc_name))
 
 
 def get_doctor_mingxi():
-    data = pd.read_excel('../data/model_shangxian/医师违规2020_final.xlsx', encoding='utf-8').values
+    data = pd.read_excel('../../data/model_shangxian/医师违规2020——后半年_final.xlsx', encoding='utf-8').values
     doctor_ids = dict()
 
     # 医师编码与主键的映射
@@ -206,7 +206,7 @@ def get_doctor_mingxi():
 
     doctor_record = dict()
     while True:
-        print('row: {}'.format(cnt))
+        # print('row: {}'.format(cnt))
         cnt += 1000
         rows = cursor.fetchmany(1000)
         if len(rows) == 0:
@@ -257,14 +257,14 @@ def get_doctor_mingxi():
                 output_data.append([record[0], record[1], liushui, cnt, tag, record[-2]])
                 cnt += 1
     output_data = pd.DataFrame(output_data, columns=['外键', '机构编码', '就诊流水号', '主键', '类型', '处方时间'])
-    output_data.to_excel('../data/model_shangxian/医师违规明细2020_final.xlsx', index=False)
+    output_data.to_excel('../../data/model_shangxian/医师违规明细2020——后半年_final.xlsx', index=False)
 
 
 if __name__ == '__main__':
     # 下面两步，分开执行
     start = time.time()
     # 获取违规医师
-    # get_yichang_doctor()
+    get_yichang_doctor()
 
     # # 获取违规医师相应明细
     get_doctor_mingxi()
