@@ -4,6 +4,7 @@ import datetime
 import time
 import os
 # from sklearn.cluster import KMeans
+from tqdm.auto import tqdm
 
 '''
 住院异常
@@ -86,7 +87,8 @@ def preprocess(hospital_types):
         all_exp_p_list = []
         avg_money_list = []
         # 按人进行分组
-        for pid, p_records in hospital_data.groupby(by='AAC001'):
+        bar = tqdm(hospital_data.groupby(by='AAC001'))
+        for pid, p_records in bar:
             temp_records = []
             # 按个人就医机构进行分组
             time_set = set()
@@ -192,7 +194,8 @@ def preprocess_old(hospital_types):
         one_money_list = []
         one_days_list = []
         # 按人进行分组
-        for pid, p_records in hospital_data.groupby(by='AAC001'):
+        bar = hospital_data.groupby(by='AAC001')
+        for pid, p_records in bar:
             # 按个人就医机构进行分组
             all_days = all_count = all_med_fee = all_exp_fee = all_liezhi_money = all_money = 0
             org_count = set()
