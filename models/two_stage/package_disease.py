@@ -140,7 +140,7 @@ if __name__ == '__main__':
     else:
         support = 0.15
         ans = preprocess_all_org(df, min_support=support)
-        with open(os.path.join(pickle_path, 'package_disease_ans_all_%.2f.txt' % support, 'w')) as f:
+        with open(os.path.join(pickle_path, 'package_disease_ans_all_%.2f.txt' % support), 'w') as f:
             for itemset_count in sorted(ans, key=lambda x: x[1], reverse=True):
                 f.write(str(itemset_count) + '\n')
     end_time = time.time()
