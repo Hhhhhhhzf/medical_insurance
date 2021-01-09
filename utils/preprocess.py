@@ -5,9 +5,12 @@ import os
 
 
 def fetch_data(sql_line, path, file, from_db=False):
+    print('ready to fetch data...')
     if os.path.exists(os.path.join(path, file)) and not from_db:
+        print('file exists.')
         df = pd.read_pickle(os.path.join(path, file))
     else:
+        print('file not exits.')
         try:
             connection_ = cx.Connection('me/mypassword@192.168.0.241:1521/helowin', encoding="UTF-8")
         except ValueError as e:
