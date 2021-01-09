@@ -138,12 +138,12 @@ if __name__ == '__main__':
                 f.write('\n\n')
     # 所有机构
     else:
-        support = 0.15
+        support = 0.10
         ans = preprocess_all_org(df, min_support=support)
         with open(os.path.join(pickle_path, 'package_disease_ans_all_%.2f.txt' % support), 'w') as f:
             for itemset_count in sorted(ans, key=lambda x: x[1], reverse=True):
                 f.write(str(itemset_count) + '\n')
     end_time = time.time()
     print('finish')
-    print('time cost : %.2f s' % ((end_time - start_time) / 60, ))
+    print('time cost : %.2f min' % ((end_time - start_time) / 60, ))
 
