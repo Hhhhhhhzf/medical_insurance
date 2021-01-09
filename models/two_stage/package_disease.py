@@ -97,22 +97,52 @@ def preprocess(data, min_support=0.01, min_transaction=100, item_size=2):
     return org, ans, distribution_, ans_item_sets_
 
 
+def preprocess_all_org(data, min_support=0.01, item_size=2):
+    """
+    获取所有机构的疾病组合
+    :param data:
+    :param min_support:
+    :param item_size:
+    :return:  ans_：中间结果(,),(,), ..
+    """
+    ans_ = []
+    transactions = fetch_transactions(data)
+    itemsets = find_frequent_itemsets(transactions, minimum_support=int(len(transactions) * min_support),
+                                      include_support=True)
+    for itemset, support_ in itemsets:
+        itemset.sort()
+        if len(itemset) >= item_size:
+            print(str((itemset, support_)))
+            ans_.append((itemset, support_))
+    return ans_
+
+
 if __name__ == '__main__':
     start_time = time.time()
     pickle_path = '../../data/two_stage/data/'
     data_file = 'package_disease_data.pkl'
-    support = 0.10
+    single = False
     df = fetch_data(sql_line, pickle_path, data_file, from_db=False)
-    print(df.shape)
+    print('数据集尺寸', df.shape)
 
-    org, ans, _, ans_item_sets = preprocess(df, support)
-    with open(os.path.join(pickle_path, 'package_disease_ans_%.2f.txt' % support), 'w') as f:
-        for i, org_ans in enumerate(ans):
-            f.write('机构编码：%s  机构名称：%s\n' % (org[i][0], org[i][1],))
-            for item_set, count in org_ans:
-                f.write(str(item_set) + ':')
-                f.write(str(count) + '    ')
-            f.write('\n\n')
+    # 单机构
+    if single:
+        support = 0.10
+        org, ans, _, ans_item_sets = preprocess(df, support)
+        with open(os.path.join(pickle_path, 'package_disease_ans_%.2f.txt' % support), 'w') as f:
+            for i, org_ans in enumerate(ans):
+                f.write('机构编码：%s  机构名称：%s\n' % (org[i][0], org[i][1],))
+                for item_set, count in org_ans:
+                    f.write(str(item_set) + ':')
+                    f.write(str(count) + '    ')
+                f.write('\n\n')
+    # 所有机构
+    else:
+        support = 0.15
+        ans = preprocess_all_org(df, min_support=support)
+        with open(os.path.join(pickle_path, 'package_disease_ans_all_%.2f.txt' % support, 'w')) as f:
+            for itemset_count in sorted(ans, key=lambda x: x[1], reverse=True):
+                f.write(str(itemset_count) + '\n')
     end_time = time.time()
     print('finish')
     print('time cost : %.2f s' % ((end_time - start_time) / 60, ))
