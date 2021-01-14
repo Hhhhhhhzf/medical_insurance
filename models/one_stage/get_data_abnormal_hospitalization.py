@@ -67,7 +67,7 @@ drug_sql = """SELECT
                 
                 AND substr( TLF_KC60.AKC001, 1, 4 ) = '2020' 
                 AND TLF_KC21.BKC197 <> '1' --剔除中心报销
-                
+                AND TLF_KC21.AKC131 is null -- 剔除转院
                 AND EXISTS (
                 SELECT
                     1 
