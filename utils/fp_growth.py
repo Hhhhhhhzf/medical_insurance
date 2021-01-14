@@ -56,17 +56,18 @@ def find_frequent_itemsets(transactions, minimum_support, include_support=False)
 
     def find_with_suffix(tree, suffix):
         for item, nodes in tree.items():
-            support = sum(n.count for n in nodes)
-            if support >= minimum_support and item not in suffix:
-                # New winner!
-                found_set = [item] + suffix
-                yield (found_set, support) if include_support else found_set
+            if item is not None:
+                support = sum(n.count for n in nodes)
+                if support >= minimum_support and item not in suffix:
+                    # New winner!
+                    found_set = [item] + suffix
+                    yield (found_set, support) if include_support else found_set
 
-                # Build a conditional tree and recursively search for frequent
-                # itemsets within it.
-                cond_tree = conditional_tree_from_paths(tree.prefix_paths(item))
-                for s in find_with_suffix(cond_tree, found_set):
-                    yield s # pass along the good news to our caller
+                    # Build a conditional tree and recursively search for frequent
+                    # itemsets within it.
+                    cond_tree = conditional_tree_from_paths(tree.prefix_paths(item))
+                    for s in find_with_suffix(cond_tree, found_set):
+                        yield s # pass along the good news to our caller
 
     # Search for frequent itemsets, and yield the results we find.
     for itemset in find_with_suffix(master, []):
