@@ -6,12 +6,12 @@
 </head>
 
 <body>
-<div id="chartmain" style="width:600px; height: 400px;"></div>
+<div id="chartmain" style="width:1200px; height: 600px;"></div>
 </body>
 
 <script type="text/javascript" src="../js/jquery-3.5.1.min.js"></script>
-<script type="text/javascript" src="../js/dataTool.min.js"></script>
 <script type="text/javascript" src="../js/echarts.js"></script>
+<script type="text/javascript" src="../js/dataTool.min.js"></script>
 <script type="text/javascript">
     function load(name) {
         let xhr = new XMLHttpRequest(),
@@ -26,7 +26,7 @@
     console.log(xml);
     var myChart = echarts.init(document.getElementById('chartmain'));
     // myChart.showLoading();
-    myChart.hideLoading();
+    // myChart.hideLoading();
 
     var graph = echarts.dataTool.gexf.parse(xml);
     var categories = [];

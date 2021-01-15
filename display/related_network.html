@@ -6,77 +6,84 @@
 </head>
 
 <body>
-<div id="chartmain" style="width:600px; height: 400px;"></div>
+<div id="chartmain" style="width:1200px; height: 1000px;"></div>
 </body>
 
-<script type="text/javascript" src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
-<script type="text/javascript" src="../js/dataTool.min.js"></script>
+<script type="text/javascript" src="../js/jquery-3.5.1.min.js"></script>
 <script type="text/javascript" src="../js/echarts.js"></script>
+<script type="text/javascript" src="../js/dataTool.min.js"></script>
 <script type="text/javascript">
+    function load(name) {
+        let xhr = new XMLHttpRequest(),
+            okStatus = document.location.protocol === "file:" ? 0 : 200;
+        xhr.open('GET', name, false);
+        xhr.overrideMimeType("text/html;charset=utf-8");//默认为utf-8
+        xhr.send(null);
+        return xhr.status === okStatus ? xhr.responseText : null;
+    }
+
+    let xml = load("../data/xml/les-miserables.gexf");
+    console.log(xml);
     var myChart = echarts.init(document.getElementById('chartmain'));
-    myChart.showLoading();
+    // myChart.showLoading();
+    // myChart.hideLoading();
 
-    $.get('https://echarts.apache.org/examples/data/asset/data/les-miserables.gexf', function (xml) {
-        myChart.hideLoading();
-
-        var graph = echarts.dataTool.gexf.parse(xml);
-        var categories = [];
-        for (var i = 0; i < 9; i++) {
-            categories[i] = {
-                name: '类目' + i
-            };
-        }
-        graph.nodes.forEach(function (node) {
-            node.itemStyle = null;
-            node.value = node.symbolSize;
-            node.symbolSize /= 1.5;
-            node.label = {
-                normal: {
-                    show: node.symbolSize > 10
-                }
-            };
-            node.category = node.attributes.modularity_class;
-        });
-        option = {
-            title: {
-                text: 'Les Miserables',
-                subtext: 'Circular layout',
-                top: 'bottom',
-                left: 'right'
-            },
-            tooltip: {},
-            legend: [{
-                data: categories.map(function (a) {
-                    return a.name;
-                })
-            }],
-            animationDurationUpdate: 1500,
-            animationEasingUpdate: 'quinticInOut',
-            series: [
-                {
-                    name: 'Les Miserables',
-                    type: 'graph',
-                    layout: 'circular',
-                    circular: {
-                        rotateLabel: true
-                    },
-                    data: graph.nodes,
-                    links: graph.links,
-                    categories: categories,
-                    roam: true,
-                    label: {
-                        position: 'right',
-                        formatter: '{b}'
-                    },
-                    lineStyle: {
-                        color: 'source',
-                        curveness: 0.3
-                    }
-                }
-            ]
+    var graph = echarts.dataTool.gexf.parse(xml);
+    var categories = [];
+    for (var i = 0; i < 9; i++) {
+        categories[i] = {
+            name: '类目' + i
         };
-
-        myChart.setOption(option);
-    }, 'xml');
+    }
+    graph.nodes.forEach(function (node) {
+        node.itemStyle = null;
+        node.value = node.symbolSize;
+        node.symbolSize /= 1.5;
+        node.label = {
+            normal: {
+                show: node.symbolSize > 10
+            }
+        };
+        node.category = node.attributes.modularity_class;
+    });
+    option = {
+        title: {
+            text: 'Les Miserables',
+            subtext: 'Circular layout',
+            top: 'bottom',
+            left: 'right'
+        },
+        tooltip: {},
+        legend: [{
+            data: categories.map(function (a) {
+                return a.name;
+            })
+        }],
+        animationDurationUpdate: 1500,
+        animationEasingUpdate: 'quinticInOut',
+        series: [
+            {
+                name: 'Les Miserables',
+                type: 'graph',
+                layout: 'circular',
+                circular: {
+                    rotateLabel: true
+                },
+                data: graph.nodes,
+                links: graph.links,
+                categories: categories,
+                roam: true,
+                label: {
+                    position: 'right',
+                    formatter: '{b}'
+                },
+                lineStyle: {
+                    color: 'source',
+                    curveness: 0.3
+                }
+            }
+        ]
+    };
+    myChart.setOption(option);
 </script>
 </html>
