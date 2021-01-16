@@ -1,89 +1,94 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>极坐标弧长链接图</title>
+          </head>
+          <body>
+            <div id="container" />
+            <script src="https://gw.alipayobjects.com/os/lib/antv/g2/4.1.4/dist/g2.min.js"></script>
+            <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.data-set-0.11.1/dist/data-set.js"></script>
+            <script>
+            // <!-- 浏览器引入，请使用全局命名空间 G2，如 new Chart() 改为 new G2.Chart，即可运行。 -->
+                const colors = [
+      '#1890FF',
+      '#2FC25B',
+      '#FACC14',
+      '#223273',
+      '#8543E0',
+      '#13C2C2',
+      '#3436C7',
+      '#F04864'
+    ];
+    fetch('https://gw.alipayobjects.com/os/antvdemo/assets/data/relationship-with-weight.json')
+      .then(res => res.json())
+      .then(data => {
+        // arc diagram layout
+        const ds = new G2.DataSet();
+        const dv = ds.createView().source(data, {
+          type: 'graph',
+          edges: d => d.links
+        });
+        dv.transform({
+          type: 'diagram.arc',
+          marginRatio: 0.5
+        });
 
-<body>
-<div id="chartmain" style="width:1200px; height: 600px;"></div>
-</body>
+        const chart = new G2.Chart({
+          container: 'container',
+          autoFit: true,
+          height: 500,
+          padding: 50,
+        });
+        chart.legend(false);
+        chart.tooltip({
+          showTitle: false,
+          showMarkers: false
+        });
+        chart.scale({
+          x: {
+            nice: true,
+            sync: true,
+          },
+          y: {
+            nice: true,
+            sync: true,
+          },
+        });
 
-<script type="text/javascript" src="../js/jquery-3.5.1.min.js"></script>
-<script type="text/javascript" src="../js/echarts.js"></script>
-<script type="text/javascript" src="../js/dataTool.min.js"></script>
-<script type="text/javascript">
-    function load(name) {
-        let xhr = new XMLHttpRequest(),
-            okStatus = document.location.protocol === "file:" ? 0 : 200;
-        xhr.open('GET', name, false);
-        xhr.overrideMimeType("text/html;charset=utf-8");//默认为utf-8
-        xhr.send(null);
-        return xhr.status === okStatus ? xhr.responseText : null;
-    }
+        const edgeView = chart.createView();
+        edgeView.coordinate('polar').reflect('y');
+        edgeView.data(dv.edges);
+        edgeView.axis(false);
+        edgeView.edge()
+          .position('x*y')
+          .shape('arc')
+          .color('source', colors)
+          .tooltip('source*target')
+          .style({
+            opacity: 0.3
+          });
 
-    let xml = load("../data/xml/les-miserables.gexf");
-    console.log(xml);
-    var myChart = echarts.init(document.getElementById('chartmain'));
-    // myChart.showLoading();
-    // myChart.hideLoading();
+        const nodeView = chart.createView();
+        nodeView.coordinate('polar').reflect('y');
+        nodeView.data(dv.nodes);
+        nodeView.axis(false);
+        nodeView.point()
+          .position('x*y')
+          .shape('circle')
+          .size('value')
+          .color('id', colors)
+          .style({
+            stroke: 'grey',
+          })
+          .label('name', {
+            labelEmit: true
+          });
 
-    var graph = echarts.dataTool.gexf.parse(xml);
-    var categories = [];
-    for (var i = 0; i < 9; i++) {
-        categories[i] = {
-            name: '类目' + i
-        };
-    }
-    graph.nodes.forEach(function (node) {
-        node.itemStyle = null;
-        node.value = node.symbolSize;
-        node.symbolSize /= 1.5;
-        node.label = {
-            normal: {
-                show: node.symbolSize > 10
-            }
-        };
-        node.category = node.attributes.modularity_class;
-    });
-    option = {
-        title: {
-            text: 'Les Miserables',
-            subtext: 'Circular layout',
-            top: 'bottom',
-            left: 'right'
-        },
-        tooltip: {},
-        legend: [{
-            data: categories.map(function (a) {
-                return a.name;
-            })
-        }],
-        animationDurationUpdate: 1500,
-        animationEasingUpdate: 'quinticInOut',
-        series: [
-            {
-                name: 'Les Miserables',
-                type: 'graph',
-                layout: 'circular',
-                circular: {
-                    rotateLabel: true
-                },
-                data: graph.nodes,
-                links: graph.links,
-                categories: categories,
-                roam: true,
-                label: {
-                    position: 'right',
-                    formatter: '{b}'
-                },
-                lineStyle: {
-                    color: 'source',
-                    curveness: 0.3
-                }
-            }
-        ]
-    };
-    myChart.setOption(option);
-</script>
-</html>
+        chart.interaction('element-active');
+
+        chart.render();
+      });
+            </script>
+          </body>
+        </html>
