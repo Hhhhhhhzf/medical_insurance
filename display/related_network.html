@@ -22,13 +22,13 @@
         return xhr.status === okStatus ? xhr.responseText : null;
     }
 
-    let xml = load("../data/xml/les-miserables.gexf");
-    console.log(xml);
+    // let xml = load("../data/two_stage/data/hecore.json");
     var myChart = echarts.init(document.getElementById('chartmain'));
     // myChart.showLoading();
     // myChart.hideLoading();
 
-    var graph = echarts.dataTool.gexf.parse(xml);
+    var graph = load("../data/two_stage/data/hecore.json");
+    console.log(graph);
     var categories = [];
     for (var i = 0; i < 9; i++) {
         categories[i] = {
