@@ -1,8 +1,44 @@
-from gexf import Gexf
+# from gexf import Gexf
 import os
 
 MOVE_DISEASE = ['疾病名称不详', '原发性高血压', '特发性(原发性)高血压', '预防措施', '健康查体', '责任医生签约']
 MOVE_DISEASE = set(MOVE_DISEASE)
+
+
+def read_relation_simple(path, file_name):
+    outputs = []
+    with open(os.path.join(path, file_name), 'r') as f:
+        for line in f.readlines():
+            if line != '':
+                line = line[:-1]
+                line = eval(line)
+                if len(line[0]) == 2:
+                    d1, d2, w = line[0][0], line[0][1], line[1]
+                    if d1 in MOVE_DISEASE or d2 in MOVE_DISEASE:
+                        continue
+                    if '高血压' in d1:
+                        d1 = '高血压'
+                    if '高血压' in d2:
+                        d2 = '高血压'
+                    if d1 != d2:
+                        outputs.append([d1, d2, w])
+                else:
+                    d1, d2, d3, w = line[0][0], line[0][1], line[0][2], line[1]
+                    if d1 in MOVE_DISEASE or d2 in MOVE_DISEASE or d3 in MOVE_DISEASE:
+                        continue
+                    if '高血压' in d1:
+                        d1 = '高血压'
+                    if '高血压' in d2:
+                        d2 = '高血压'
+                    if '高血压' in d3:
+                        d3 = '高血压'
+                    if d1 != d2:
+                        outputs.append([d1, d2, w])
+                    if d1 != d3:
+                        outputs.append([d1, d3, w])
+                    if d2 != d3:
+                        outputs.append([d2, d3, w])
+    return outputs
 
 
 def read_relation(path, file_name):
@@ -118,7 +154,7 @@ def read_relation(path, file_name):
 #     output_file.write(etree.tostring(gexf_xml, pretty_print=True, encoding='utf-8', xml_declaration=True))
 
 
-
 if __name__ == '__main__':
-    pass
+    path, file = '../data/two_stage/data/', 'package_disease_ans_all_0.02.txt'
+    print(read_relation_simple(path, file))
 
