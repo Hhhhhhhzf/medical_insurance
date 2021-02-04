@@ -1,9 +1,10 @@
 import pandas as pd
+from pandas.io import sql
+import cx_Oracle as cx
 import numpy as np
 import datetime
 import time
 import os
-# from sklearn.cluster import KMeans
 from tqdm.auto import tqdm
 
 '''
@@ -22,8 +23,8 @@ output_path = '/home/hezhenfeng/medical_insurance/data/output/'
 
 AGE_LOW_THRESHOLD, AGE_HIGH_THRESHOLD = 50, 60
 
-prescribed_df = pd.read_pickle(os.path.join(pickle_path, 'prescribed_disease.pkl'))
-prescribed_disease_list = list(prescribed_df['AAC001'])
+# prescribed_df = pd.read_pickle(os.path.join(pickle_path, 'prescribed_disease.pkl'))
+# prescribed_disease_list = list(prescribed_df['AAC001'])
 
 DAYS_THRESHOLD = 182  # 半年
 
@@ -49,8 +50,8 @@ def remove_flag(pid, item_code):
     # 有手术记录，或有规定病种记录
     if item_code.find('f32') >= 0 or item_code.find('f33') >= 0:
         return 1
-    elif pid in prescribed_disease_list:
-        return 1
+    # elif pid in prescribed_disease_list:
+    #     return 1
     else:
         return 0
 
@@ -61,6 +62,49 @@ def old_remove_flag(item_code):
         return 1
     else:
         return 0
+
+
+def exist_test_higher_org(pid, org_id, settle_id):
+    rank_sql = """
+    SELECT
+        h.aka101, -- 机构等级
+        to_char(a.BKC192, 'yyyy-mm-dd hh24:mi:ss') as BKC192 -- 住院时间
+    FROM
+        tlf_kc21 a
+        INNER JOIN HOSPITAL h ON a.AKB020_1 = h.AKB020 
+    WHERE
+        a.akc190 = '%s' 
+        AND a.AKB020_1 = '%s'
+    """
+    higher_sql = """SELECT
+                        1 
+                    FROM
+                        TLF_KC22
+                        INNER JOIN TLF_KC60 ON TLF_KC60.AKC190 = TLF_KC22.AKC190 
+                        AND TLF_KC60.AKB020_1 = TLF_KC22.AKB020_1
+                        INNER JOIN TLF_KC21 ON TLF_KC21.AKC190 = TLF_KC22.AKC190 
+                        AND TLF_KC21.AKB020_1 = TLF_KC22.AKB020_1
+                        INNER JOIN HOSPITAL ON HOSPITAL.AKB020 = TLF_KC22.AKB020_1 --hospital只用来分类，可以使用AKB020
+                    WHERE
+                        TLF_KC21.AKA130 = '21' 
+                        -- AND HOSPITAL.AAA027 = '330183'  全部的住院机构
+                        AND HOSPITAL.AKB022 = '1' --非药店机构
+                        AND substr( TLF_KC60.AKC001, 1, 4 ) = '2020' 
+                        and tlf_kc21.AAC001 = '%s' -- 人
+                        AND tlf_kc21.AKB020_1 != '%s'  -- 机构编码
+                        AND TLF_KC21.akc190 != '%s'  -- 结算编码
+                        AND to_char(tlf_kc21.BKC192, 'yyyy-mm-dd hh24:mi:ss') > '%s'  --时间靠后
+                        and substr(HOSPITAL.AKA101, 1, 1) > '%s' -- 级别更大, 看首位
+                        AND ROWNUM < 10
+                        """
+    connection = cx.connect('me/mypassword@192.168.0.241:1521/helowin', encoding="UTF-8")
+    df = sql.read_sql(rank_sql % (settle_id, org_id), connection)
+    rank, in_hospital_time = df.loc[0, 'AKA101'], df.loc[0, 'BKC192']
+    df = sql.read_sql(higher_sql % (pid, org_id, settle_id, in_hospital_time, rank[0]), connection)
+    if len(df) > 0:
+        return True
+    else:
+        return False
 
 
 def preprocess(hospital_types):
@@ -309,14 +353,15 @@ def main():
 
         for j in range(len(examination_type)):
             row = examination_type.iloc[j]
-            result.append([index1, row['p_id'], row['p_name'], row['age'], row['org_count'], row['one_days'],
-                           threshold['th_one_days'], row['all_count'], threshold['th_all_count'], row['avg_money'],
-                           threshold['th_avg_money'], row['med_p'], threshold['th_one_med_p_low'],
-                           row['exp_p'], threshold['th_one_exp_p'], row['org_codes'], row['type'],  row['liezhi_money'],
-                           threshold['th_one_liezhi_money']])
-            result_detail.append([index2, index1, row['org_codes'], row['settle_ids']])
-            index1 += 1
-            index2 += 1
+            if not exist_test_higher_org(row['p_id'], row['org_codes'], row['settle_ids']):  # 不存在更高等级机构的住院
+                result.append([index1, row['p_id'], row['p_name'], row['age'], row['org_count'], row['one_days'],
+                               threshold['th_one_days'], row['all_count'], threshold['th_all_count'], row['avg_money'],
+                               threshold['th_avg_money'], row['med_p'], threshold['th_one_med_p_low'],
+                               row['exp_p'], threshold['th_one_exp_p'], row['org_codes'], row['type'],  row['liezhi_money'],
+                               threshold['th_one_liezhi_money']])
+                result_detail.append([index2, index1, row['org_codes'], row['settle_ids']])
+                index1 += 1
+                index2 += 1
         for j in range(len(medical_type)):
             row = medical_type.iloc[j]
             result.append([index1, row['p_id'], row['p_name'], row['age'], row['org_count'], row['one_days'],
@@ -355,64 +400,6 @@ def main():
     output_detail = pd.DataFrame(result_detail, columns=columns_index2)
     output_detail.to_excel(os.path.join(output_path, 'DM_WARNING_HOSPITAL_DETAIL.xlsx'), index=False)
 
-
-# def kmeans(n_class):
-#     models = KMeans(n_clusters=n_class)
-#     # 体检、药品住院
-#
-#     result = []  # 结果表集合
-#     result_detail = []  # 结果明细表集合
-#     index1 = index2 = 0
-#
-#     thresholds = pd.read_pickle(os.path.join(preprocess_path, 'thresholds.pkl'))
-#     normal_type1 = normal_type2 = None
-#     for i, hospital_type in enumerate(['public',]): #  'community', 'private', 'private_other']):
-#         person_records = pd.read_pickle(os.path.join(preprocess_path, 'preprocessed_data_' + hospital_type + '.pkl'))
-#         # models.fix(person_records.drop(lables=['p_id', 'p_name', 'org_codes', 'settle_ids', 'type']))
-#         threshold = thresholds.iloc[i]
-#         normal_type1 = person_records[(person_records['one_days'] > threshold['th_one_days']) |
-#                                       (person_records['med_p'] > threshold['th_one_med_p_low']) |
-#                                       (person_records['exp_p'] > threshold['th_one_exp_p']) |
-#                                       (person_records['flag'] == 1)]
-#         for j in range(len(normal_type1.loc[:100])):
-#             row = normal_type1.iloc[j]
-#             result.append([index1, row['p_id'], row['p_name'], row['age'], row['org_count'], row['one_days'],
-#                            threshold['th_one_days'], row['all_count'], threshold['th_all_count'], row['avg_money'],
-#                            threshold['th_avg_money'], row['med_p'], threshold['th_one_med_p_low'],
-#                            row['exp_p'], threshold['th_one_exp_p'], row['org_codes'], row['type'], row['liezhi_money'],
-#                            threshold['th_one_liezhi_money']])
-#             result_detail.append([index2, index1, row['org_codes'], row['settle_ids']])
-#             index1 += 1
-#             index2 += 1
-#     # 养老住院
-#     thresholds = pd.read_pickle(os.path.join(preprocess_path, 'thresholds_old.pkl'))
-#     for i, hospital_type in enumerate(['private']):
-#         threshold = thresholds.iloc[i]
-#         person_records = pd.read_pickle(os.path.join(preprocess_path, 'preprocessed_data_' + hospital_type + '_old.pkl'))
-#
-#         normal_type2 = person_records[((person_records['one_money'] > threshold['th_one_money']) |
-#                                        (person_records['all_count'] < threshold['th_all_count']))
-#                                       |
-#                                       ((person_records['one_days'] < threshold['th_one_days']) |
-#                                        (person_records['avg_money'] > threshold['th_avg_money']) |
-#                                        (person_records['flag'] == 1))]
-#         for j in range(len(normal_type2.loc[:100])):
-#             row = normal_type2.iloc[j]
-#             org_code = row['org_codes']
-#             settle_id = row['settle_ids']
-#             result.append([index1, row['p_id'], row['p_name'], row['age'], row['org_count'], row['one_days'],
-#                            threshold['th_one_days'], row['all_count'], threshold['th_all_count'],
-#                            row['avg_money'], threshold['th_avg_money'], row['med_p'],
-#                            threshold['th_all_med_p'], row['exp_p'], threshold['th_all_exp_p'],
-#                            org_code, row['type'], row['liezhi_money'], threshold['th_all_liezhi_money']])
-#             result_detail.append([index2, index1, org_code, settle_id])
-#             index2 += 1
-#             index1 += 1
-#     columns_index1 = ['主键', '就诊人', '就诊人名称', '年龄', '住院机构数量', '住院天数', '住院天数阈值', '总住院次数', '总住院次数阈值',
-#                       '住院日均次费用', '住院日均次费用阈值', '药占比', '药占比阈值', '检查比率', '检查比率阈值', '机构编码逗号分隔',
-#                       '类别', '住院列支总费用', '住院列支总费用阈值']
-#     output = pd.DataFrame(result, columns=columns_index1)
-#     output.to_excel(os.path.join(output_path, 'normal.xlsx'), index=False)
 
 if __name__ == '__main__':
     t1 = time.time()
